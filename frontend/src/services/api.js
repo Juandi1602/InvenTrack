@@ -16,9 +16,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
+      const mensaje = error.response?.data?.message || 'Tu sesión ha expirado';
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
       if (window.location.pathname !== '/login') {
+        localStorage.setItem('sesion_expirada_msg', mensaje);
         window.location.href = '/login';
       }
     }

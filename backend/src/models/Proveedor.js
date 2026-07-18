@@ -28,6 +28,11 @@ const Proveedor = {
     );
   },
 
+  async tieneProductos(id) {
+    const [rows] = await pool.query('SELECT COUNT(*) AS total FROM productos WHERE proveedor_id = ? AND activo = TRUE', [id]);
+    return rows[0].total > 0;
+  },
+
   async delete(id) {
     await pool.query('DELETE FROM proveedores WHERE id = ?', [id]);
   }

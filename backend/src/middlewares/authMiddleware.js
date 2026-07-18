@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const pool = require('../config/db');
 
 function verificarToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -6,10 +7,19 @@ function verificarToken(req, res, next) {
 
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
-    req.usuario = decoded;
-    next();
+
+    try {
+      const [rows] = await pool.query('SELECT activo FROM usuarios WHERE id = ?', [decoded.id]);
+      if (rows.length === 0 || !rows[0].activo) {
+        return res.status(403).json({ message: 'Tu cuenta ha sido desactivada' });
+      }
+      req.usuario = decoded;
+      next();
+    } catch (error) {
+      res.status(500).json({ message: 'Error al verificar usuario' });
+    }
   });
 }
 

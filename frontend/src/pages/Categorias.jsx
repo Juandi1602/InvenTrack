@@ -78,38 +78,40 @@ export default function Categorias() {
       {loading ? (
         <TableSkeleton columns={3} />
       ) : (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-800/50 text-slate-400">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">Nombre</th>
-              <th className="text-left px-4 py-3 font-medium">Descripción</th>
-              <th className="text-right px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categorias.map((c) => (
-              <tr key={c.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
-                <td className="px-4 py-3">{c.nombre}</td>
-                <td className="px-4 py-3 text-slate-400">{c.descripcion || '—'}</td>
-                <td className="px-4 py-3">
-                  {usuario.rol === 'admin' && (
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => abrirEditar(c)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
-                        <Pencil size={15} />
-                      </button>
-                      <button onClick={() => setConfirmDelete(c)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {categorias.length === 0 && <p className="text-center text-slate-500 py-8">No hay categorías registradas</p>}
-      </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800/50 text-slate-400">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Nombre</th>
+                  <th className="text-left px-4 py-3 font-medium">Descripción</th>
+                  <th className="text-right px-4 py-3 font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categorias.map((c) => (
+                  <tr key={c.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
+                    <td className="px-4 py-3">{c.nombre}</td>
+                    <td className="px-4 py-3 text-slate-400">{c.descripcion || '—'}</td>
+                    <td className="px-4 py-3">
+                      {usuario.rol === 'admin' && (
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => abrirEditar(c)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
+                            <Pencil size={15} />
+                          </button>
+                          <button onClick={() => setConfirmDelete(c)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {categorias.length === 0 && <p className="text-center text-slate-500 py-8">No hay categorías registradas</p>}
+        </div>
       )}
 
       {modalOpen && (

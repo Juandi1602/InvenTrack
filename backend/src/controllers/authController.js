@@ -3,9 +3,13 @@ const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 
 const authController = {
-  async register(req, res) {
+async register(req, res) {
     try {
       const { nombre, email, password, rol } = req.body;
+
+      if (!password || password.length < 8) {
+        return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+      }
 
       const existente = await Usuario.getByEmail(email);
       if (existente) return res.status(400).json({ message: 'El email ya está registrado' });
@@ -19,12 +23,14 @@ const authController = {
     }
   },
 
-  async login(req, res) {
+async login(req, res) {
     try {
       const { email, password } = req.body;
 
       const usuario = await Usuario.getByEmail(email);
       if (!usuario) return res.status(401).json({ message: 'Credenciales inválidas' });
+
+      if (!usuario.activo) return res.status(403).json({ message: 'Esta cuenta está desactivada. Contacta a un administrador.' });
 
       const valido = await bcrypt.compare(password, usuario.password);
       if (!valido) return res.status(401).json({ message: 'Credenciales inválidas' });
@@ -64,7 +70,10 @@ async actualizarPerfil(req, res) {
       await pool.query('UPDATE usuarios SET nombre = ? WHERE id = ?', [nombre, req.usuario.id]);
     }
 
-    if (passwordNueva) {
+if (passwordNueva) {
+      if (passwordNueva.length < 8) {
+        return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres' });
+      }
       const [rows] = await pool.query('SELECT password FROM usuarios WHERE id = ?', [req.usuario.id]);
       const valido = await bcrypt.compare(passwordActual, rows[0].password);
       if (!valido) return res.status(400).json({ message: 'Contraseña actual incorrecta' });

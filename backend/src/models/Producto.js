@@ -39,6 +39,22 @@ const Producto = {
 
   async delete(id) {
     await pool.query('UPDATE productos SET activo = FALSE WHERE id = ?', [id]);
+  },
+
+  async getEliminados() {
+    const [rows] = await pool.query(`
+      SELECT p.*, c.nombre AS categoria_nombre, pr.nombre AS proveedor_nombre
+      FROM productos p
+      LEFT JOIN categorias c ON p.categoria_id = c.id
+      LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+      WHERE p.activo = FALSE
+      ORDER BY p.updated_at DESC
+    `);
+    return rows;
+  },
+
+  async restaurar(id) {
+    await pool.query('UPDATE productos SET activo = TRUE WHERE id = ?', [id]);
   }
 };
 

@@ -6,6 +6,10 @@ import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
 import TableSkeleton from '../components/TableSkeleton';
 import Pagination from '../components/Pagination';
+import { exportarExcel, exportarPDF } from '../utils/exportar';
+import { FileSpreadsheet, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 
 export default function Productos() {
   const { usuario } = useAuth();
@@ -22,6 +26,11 @@ export default function Productos() {
   const [filtroStock, setFiltroStock] = useState('');
   const [paginaActual, setPaginaActual] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [modalCargaMasiva, setModalCargaMasiva] = useState(false);
+  const [archivoCarga, setArchivoCarga] = useState(null);
+  const [subiendoCarga, setSubiendoCarga] = useState(false);
+  const [resultadoCarga, setResultadoCarga] = useState(null);
 
   function formVacio() {
     return {
@@ -57,6 +66,27 @@ export default function Productos() {
       setForm(formVacio());
     }
     setModalOpen(true);
+  };
+
+  const handleImagenChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSubiendoImagen(true);
+    const formData = new FormData();
+    formData.append('imagen', file);
+
+    try {
+      const { data } = await api.post('/productos/imagen', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setForm((prev) => ({ ...prev, imagen_url: data.url }));
+      toast.success('Imagen subida');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al subir imagen');
+    } finally {
+      setSubiendoImagen(false);
+    }
   };
 
   const abrirEditar = (producto) => {
@@ -104,16 +134,73 @@ export default function Productos() {
   const totalPaginas = Math.ceil(productosFiltrados.length / porPagina) || 1;
   const productosPagina = productosFiltrados.slice((paginaActual - 1) * porPagina, paginaActual * porPagina);
 
+  const columnasExport = [
+    { key: 'sku', label: 'SKU' },
+    { key: 'nombre', label: 'Nombre' },
+    { key: 'categoria_nombre', label: 'Categoría' },
+    { key: 'proveedor_nombre', label: 'Proveedor' },
+    { key: 'stock_actual', label: 'Stock' },
+    { key: 'stock_minimo', label: 'Stock Mínimo' },
+    { key: 'precio_compra', label: 'Precio Compra' },
+    { key: 'precio_venta', label: 'Precio Venta' },
+    { key: 'ubicacion', label: 'Ubicación' },
+  ];
+
+  const handleCargaMasiva = async (e) => {
+    e.preventDefault();
+    if (!archivoCarga) return;
+
+    setSubiendoCarga(true);
+    setResultadoCarga(null);
+    const formData = new FormData();
+    formData.append('archivo', archivoCarga);
+
+    try {
+      const { data } = await api.post('/productos/carga-masiva', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setResultadoCarga(data);
+      toast.success(`${data.creados} productos creados`);
+      cargarDatos();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al procesar el archivo');
+    } finally {
+      setSubiendoCarga(false);
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Productos</h1>
-        <button
-          onClick={abrirNuevo}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          <Plus size={16} /> Nuevo Producto
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportarExcel(productosFiltrados, columnasExport, 'productos')}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+          >
+            <FileSpreadsheet size={16} /> Excel
+          </button>
+          <button
+            onClick={() => exportarPDF(productosFiltrados, columnasExport, 'productos', 'Reporte de Productos')}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+          >
+            <FileText size={16} /> PDF
+          </button>
+          {usuario.rol === 'admin' && (
+            <button
+              onClick={() => { setModalCargaMasiva(true); setArchivoCarga(null); setResultadoCarga(null); }}
+              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+            >
+              <Upload size={16} /> Carga Masiva
+            </button>
+          )}
+          <button
+            onClick={abrirNuevo}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus size={16} /> Nuevo Producto
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
@@ -157,43 +244,62 @@ export default function Productos() {
         <TableSkeleton columns={6} />
       ) : (
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-800/50 text-slate-400">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">SKU</th>
-                <th className="text-left px-4 py-3 font-medium">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium">Categoría</th>
-                <th className="text-left px-4 py-3 font-medium">Stock</th>
-                <th className="text-left px-4 py-3 font-medium">Precio Venta</th>
-                <th className="text-right px-4 py-3 font-medium">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {productosPagina.map((p) => (
-                <tr key={p.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
-                  <td className="px-4 py-3 text-slate-400">{p.sku}</td>
-                  <td className="px-4 py-3">{p.nombre}</td>
-                  <td className="px-4 py-3 text-slate-400">{p.categoria_nombre || '—'}</td>
-                  <td className="px-4 py-3">
-                    <StockBadge stock={p.stock_actual} minimo={p.stock_minimo} />
-                  </td>
-                  <td className="px-4 py-3">S/ {Number(p.precio_venta).toFixed(2)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => abrirEditar(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
-                        <Pencil size={15} />
-                      </button>
-                      {usuario.rol === 'admin' && (
-                        <button onClick={() => setConfirmDelete(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800/50 text-slate-400">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Img</th>
+                  <th className="text-left px-4 py-3 font-medium">SKU</th>
+                  <th className="text-left px-4 py-3 font-medium">Nombre</th>
+                  <th className="text-left px-4 py-3 font-medium">Categoría</th>
+                  <th className="text-left px-4 py-3 font-medium">Stock</th>
+                  <th className="text-left px-4 py-3 font-medium">Precio Venta</th>
+                  <th className="text-right px-4 py-3 font-medium">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {productosPagina.map((p) => (
+                  <tr key={p.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
+                    <td className="px-4 py-3">
+                      {p.imagen_url ? (
+                        <img
+                          src={p.imagen_url.startsWith('/uploads') ? `http://localhost:4000${p.imagen_url}` : p.imagen_url}
+                          alt={p.nombre}
+                          className="h-9 w-9 object-cover rounded-lg border border-slate-700"
+                          onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.background = '#1e293b'; }}
+                        />
+                      ) : (
+                        <div className="h-9 w-9 bg-slate-800 rounded-lg" />
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400">{p.sku}</td>
+                    <td className="px-4 py-3">
+                      <Link to={`/productos/${p.id}`} className="hover:text-indigo-400 hover:underline">
+                        {p.nombre}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-slate-400">{p.categoria_nombre || '—'}</td>
+                    <td className="px-4 py-3">
+                      <StockBadge stock={p.stock_actual} minimo={p.stock_minimo} />
+                    </td>
+                    <td className="px-4 py-3">S/ {Number(p.precio_venta).toFixed(2)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => abrirEditar(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
+                          <Pencil size={15} />
+                        </button>
+                        {usuario.rol === 'admin' && (
+                          <button onClick={() => setConfirmDelete(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {productosFiltrados.length === 0 && <p className="text-center text-slate-500 py-8">No hay productos que coincidan</p>}
           <Pagination paginaActual={paginaActual} totalPaginas={totalPaginas} onCambiar={setPaginaActual} />
         </div>
@@ -236,6 +342,43 @@ export default function Productos() {
 
               <Campo label="Ubicación" value={form.ubicacion} onChange={(v) => setForm({ ...form, ubicacion: v })} />
 
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Imagen del producto</label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImagenChange}
+                  disabled={subiendoImagen}
+                  className="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-sm border border-slate-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-indigo-600 file:text-white file:text-xs file:cursor-pointer"
+                />
+                {subiendoImagen && <p className="text-xs text-slate-400 mt-1">Subiendo imagen...</p>}
+                <p className="text-xs text-slate-500 mt-2 mb-1">o pega una URL de imagen</p>
+                <input
+                  type="text"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                  value={form.imagen_url?.startsWith('/uploads') ? '' : form.imagen_url || ''}
+                  onChange={(e) => setForm({ ...form, imagen_url: e.target.value })}
+                  className="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-sm border border-slate-700 focus:outline-none focus:border-indigo-500"
+                />
+                {form.imagen_url && !subiendoImagen && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img
+                      src={form.imagen_url.startsWith('/uploads') ? `http://localhost:4000${form.imagen_url}` : form.imagen_url}
+                      alt="Vista previa"
+                      className="h-20 w-20 object-cover rounded-lg border border-slate-700"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, imagen_url: '' })}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      Quitar imagen
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2.5 mt-2 transition-colors">
                 {editando ? 'Guardar Cambios' : 'Crear Producto'}
               </button>
@@ -243,6 +386,53 @@ export default function Productos() {
           </div>
         </div>
       )}
+      {modalCargaMasiva && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-white">Carga Masiva de Productos</h2>
+              <button onClick={() => setModalCargaMasiva(false)} className="text-slate-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 mb-3">
+              Sube un archivo Excel (.xlsx) con columnas: sku, nombre, descripcion, categoria, proveedor, precio_compra, precio_venta, stock_actual, stock_minimo, ubicacion. La categoría y proveedor deben coincidir con nombres existentes.
+            </p>
+
+            <form onSubmit={handleCargaMasiva} className="space-y-3">
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={(e) => setArchivoCarga(e.target.files[0])}
+                disabled={subiendoCarga}
+                className="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-sm border border-slate-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-indigo-600 file:text-white file:text-xs file:cursor-pointer"
+              />
+
+              {resultadoCarga && (
+                <div className="bg-slate-800/50 rounded-lg p-3 text-xs">
+                  <p className="text-emerald-400 font-medium mb-1">{resultadoCarga.creados} productos creados</p>
+                  {resultadoCarga.errores.length > 0 && (
+                    <div className="text-red-400 mt-2">
+                      <p className="font-medium mb-1">Errores:</p>
+                      {resultadoCarga.errores.map((e, i) => <p key={i}>{e}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!archivoCarga || subiendoCarga}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2.5 mt-2 transition-colors disabled:opacity-50"
+              >
+                {subiendoCarga ? 'Procesando...' : 'Cargar Productos'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         open={!!confirmDelete}
         title="Eliminar producto"

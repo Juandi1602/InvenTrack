@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -8,15 +10,28 @@ export default function Login() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [cargando, setCargando] = useState(false);
+
+  useEffect(() => {
+    const msg = localStorage.getItem('sesion_expirada_msg');
+    if (msg) {
+      toast.error(msg);
+      localStorage.removeItem('sesion_expirada_msg');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setCargando(true);
     try {
-      await login(email, password);
+      const usuarioLogueado = await login(email, password);
+      toast.success(`Bienvenido, ${usuarioLogueado.nombre}`);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -53,9 +68,16 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2 transition-colors"
+            disabled={cargando}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            Ingresar
+            {cargando ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Ingresando...
+              </>
+            ) : (
+              'Ingresar'
+            )}
           </button>
         </form>
       </div>

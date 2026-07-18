@@ -28,6 +28,11 @@ const Categoria = {
     );
   },
 
+  async tieneProductos(id) {
+    const [rows] = await pool.query('SELECT COUNT(*) AS total FROM productos WHERE categoria_id = ? AND activo = TRUE', [id]);
+    return rows[0].total > 0;
+  },
+
   async delete(id) {
     await pool.query('DELETE FROM categorias WHERE id = ?', [id]);
   }

@@ -9,11 +9,15 @@ const authRoutes = require('./routes/authRoutes');
 const movimientoRoutes = require('./routes/movimientoRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const auditoriaRoutes = require('./routes/auditoriaRoutes');
+const seedRoutes = require('./routes/seedRoutes');
+const asistenteRoutes = require('./routes/asistenteRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'InvenTrack API funcionando' });
@@ -35,6 +39,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movimientos', movimientoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
+app.use('/api/seed', seedRoutes);
+app.use('/api/asistente', asistenteRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

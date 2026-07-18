@@ -71,52 +71,52 @@ export default function Usuarios() {
       {loading ? (
         <TableSkeleton columns={5} />
       ) : (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-800/50 text-slate-400">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">Nombre</th>
-              <th className="text-left px-4 py-3 font-medium">Email</th>
-              <th className="text-left px-4 py-3 font-medium">Rol</th>
-              <th className="text-left px-4 py-3 font-medium">Estado</th>
-              <th className="text-right px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((u) => (
-              <tr key={u.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
-                <td className="px-4 py-3">{u.nombre}</td>
-                <td className="px-4 py-3 text-slate-400">{u.email}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    u.rol === 'admin' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-700/50 text-slate-300'
-                  }`}>
-                    {u.rol}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    u.activo ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                  }`}>
-                    {u.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => abrirEditar(u)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
-                      <Pencil size={15} />
-                    </button>
-                    <button onClick={() => toggleActivo(u)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
-                      {u.activo ? <UserX size={15} /> : <UserCheck size={15} />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {usuarios.length === 0 && <p className="text-center text-slate-500 py-8">No hay usuarios registrados</p>}
-      </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800/50 text-slate-400">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Nombre</th>
+                  <th className="text-left px-4 py-3 font-medium">Email</th>
+                  <th className="text-left px-4 py-3 font-medium">Rol</th>
+                  <th className="text-left px-4 py-3 font-medium">Estado</th>
+                  <th className="text-right px-4 py-3 font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usuarios.map((u) => (
+                  <tr key={u.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
+                    <td className="px-4 py-3">{u.nombre}</td>
+                    <td className="px-4 py-3 text-slate-400">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${u.rol === 'admin' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-700/50 text-slate-300'
+                        }`}>
+                        {u.rol}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${u.activo ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                        }`}>
+                        {u.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => abrirEditar(u)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
+                          <Pencil size={15} />
+                        </button>
+                        <button onClick={() => toggleActivo(u)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
+                          {u.activo ? <UserX size={15} /> : <UserCheck size={15} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {usuarios.length === 0 && <p className="text-center text-slate-500 py-8">No hay usuarios registrados</p>}
+        </div>
       )}
 
       {modalOpen && (
@@ -156,8 +156,10 @@ export default function Usuarios() {
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
+                    minLength={8}
                     className="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-sm border border-slate-700 focus:outline-none focus:border-indigo-500"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Mínimo 8 caracteres</p>
                 </div>
               )}
               <div>

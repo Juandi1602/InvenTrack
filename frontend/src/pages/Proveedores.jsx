@@ -78,42 +78,44 @@ export default function Proveedores() {
       {loading ? (
         <TableSkeleton columns={5} />
       ) : (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-800/50 text-slate-400">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">Nombre</th>
-              <th className="text-left px-4 py-3 font-medium">Contacto</th>
-              <th className="text-left px-4 py-3 font-medium">Teléfono</th>
-              <th className="text-left px-4 py-3 font-medium">Email</th>
-              <th className="text-right px-4 py-3 font-medium">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {proveedores.map((p) => (
-              <tr key={p.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
-                <td className="px-4 py-3">{p.nombre}</td>
-                <td className="px-4 py-3 text-slate-400">{p.contacto || '—'}</td>
-                <td className="px-4 py-3 text-slate-400">{p.telefono || '—'}</td>
-                <td className="px-4 py-3 text-slate-400">{p.email || '—'}</td>
-                <td className="px-4 py-3">
-                  {usuario.rol === 'admin' && (
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => abrirEditar(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
-                        <Pencil size={15} />
-                      </button>
-                      <button onClick={() => setConfirmDelete(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {proveedores.length === 0 && <p className="text-center text-slate-500 py-8">No hay proveedores registrados</p>}
-      </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-800/50 text-slate-400">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Nombre</th>
+                  <th className="text-left px-4 py-3 font-medium">Contacto</th>
+                  <th className="text-left px-4 py-3 font-medium">Teléfono</th>
+                  <th className="text-left px-4 py-3 font-medium">Email</th>
+                  <th className="text-right px-4 py-3 font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {proveedores.map((p) => (
+                  <tr key={p.id} className="border-t border-slate-800 text-white hover:bg-slate-800/30">
+                    <td className="px-4 py-3">{p.nombre}</td>
+                    <td className="px-4 py-3 text-slate-400">{p.contacto || '—'}</td>
+                    <td className="px-4 py-3 text-slate-400">{p.telefono || '—'}</td>
+                    <td className="px-4 py-3 text-slate-400">{p.email || '—'}</td>
+                    <td className="px-4 py-3">
+                      {usuario.rol === 'admin' && (
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => abrirEditar(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white">
+                            <Pencil size={15} />
+                          </button>
+                          <button onClick={() => setConfirmDelete(p)} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-400">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {proveedores.length === 0 && <p className="text-center text-slate-500 py-8">No hay proveedores registrados</p>}
+        </div>
       )}
 
       {modalOpen && (
