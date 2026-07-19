@@ -207,7 +207,3 @@ npm test
 Cubre la lógica crítica de transacciones de stock (entradas, salidas, validación de stock insuficiente).
 
 ---
-
-## 📄 Licencia
-
-Proyecto de portafolio con fines educativos y de demostración.
